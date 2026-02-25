@@ -1,0 +1,289 @@
+.room-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+/* ── Navbar ───────────────────────────────────────────────────────────────── */
+.room-nav {
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  gap: 14px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.room-nav-left,
+.room-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.room-nav-right {
+  justify-content: flex-end;
+}
+
+.room-nav-center {
+  display: flex;
+  align-items: center;
+}
+
+.room-divider-v {
+  width: 1px;
+  height: 22px;
+  background: var(--border);
+}
+
+.room-back {
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+}
+
+.room-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.room-brand-icon { font-size: 16px; }
+
+.room-brand-name {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.room-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Language Selector ────────────────────────────────────────────────────── */
+.lang-select-group {
+  display: flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px;
+  gap: 2px;
+}
+
+.lang-tab {
+  padding: 5px 14px;
+  border-radius: 6px;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  color: var(--text3);
+  background: transparent;
+  transition: all 0.15s;
+}
+
+.lang-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.lang-tab:hover:not(.active) {
+  color: var(--text2);
+  background: var(--surface3);
+}
+
+/* User chip */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 50px;
+}
+
+.user-chip-avatar {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.user-chip-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.room-id-chip {
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* ── Body ─────────────────────────────────────────────────────────────────── */
+.room-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Editor Area ──────────────────────────────────────────────────────────── */
+.editor-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.editor-topbar {
+  height: 38px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  flex-shrink: 0;
+}
+
+.editor-file-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-file-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 2s ease infinite;
+}
+
+.editor-file-name {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.editor-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.editor-wrapper {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Output Panel ─────────────────────────────────────────────────────────── */
+.output-panel {
+  height: 160px;
+  background: #0d1117;
+  border-top: 1px solid var(--border2);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  animation: fadeUp 0.25s ease;
+}
+
+.output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.output-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+}
+
+.output-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.output-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.output-time {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text3);
+}
+
+.output-close {
+  background: none;
+  border: none;
+  color: var(--text3);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.output-close:hover { background: var(--surface3); color: var(--text); }
+
+.output-content {
+  flex: 1;
+  padding: 12px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--green);
+  line-height: 1.6;
+  overflow-y: auto;
+}
+
+/* Spinner for dark BGs */
+.spinner-dark {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
