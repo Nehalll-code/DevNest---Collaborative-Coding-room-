@@ -1,155 +1,196 @@
-# ⚡ DevNest Backend — Real-Time Collaborative Engine
+# ⚡ DevNest — Real-Time Collaborative Coding Platform
 
-> Multi-user code collaboration backend with live sync, role control, and persistent versioning.
-
----
-
-## 🧠 What This Actually Does
-
-DevNest backend is not just CRUD APIs — it’s a **state synchronization engine** for collaborative coding.
-
-* Maintains shared code state across multiple clients
-* Handles real-time updates via WebSockets
-* Enforces access control (Owner / Editor / Viewer)
-* Persists code + version history in MongoDB
+> A full-stack, multi-user coding environment with live synchronization, persistent state, and sandboxed code execution.
 
 ---
 
-## ⚙️ System Architecture
+## 🧠 Overview
 
-```id="l4t8xk"
-Client (React + Monaco)
-        ↓
-REST API (Auth, Rooms, Versions)
-        ↓
-Socket.io Server (Real-time sync layer)
-        ↓
-MongoDB (Users, Rooms, Code Snapshots)
-```
+DevNest is a distributed collaborative coding system where multiple users can join a shared workspace and edit code simultaneously.
 
-### Key Separation:
+The system combines:
 
-* **REST → persistence**
-* **WebSocket → real-time updates**
+* **Real-time state synchronization (Socket.io)**
+* **Persistent storage (MongoDB)**
+* **Secure authentication (JWT)**
+* **Remote code execution (Judge0 API)**
+
+This is not a CRUD app — it is a **multi-layered system handling concurrent user interaction, state consistency, and execution workflows**.
 
 ---
 
-## 🔥 Core Capabilities
+## 🚀 Live Capabilities
 
-### 🔐 Authentication
+### 🔐 Authentication & Access Control
 
-* JWT-based auth
-* Middleware-protected routes
-* Stateless session handling
-
----
-
-### 🏠 Room System
-
-* Create / Join rooms
-* Role-based permissions:
-
-  * Owner → full control
-  * Editor → edit code
-  * Viewer → read-only
+* JWT-based authentication
+* Protected routes (frontend + backend)
+* Role-based access (Owner / Editor / Viewer)
 
 ---
 
-### ⚡ Real-Time Sync (Socket.io)
+### 🏠 Room-Based Collaboration
 
-```id="4f8lqv"
-User types →
+* Create and join private coding rooms
+* Unique `roomId` system
+* Member tracking with roles
+
+---
+
+### ⚡ Real-Time Code Synchronization
+
+```text
+User A types →
 emit("code-change") →
-server broadcasts →
-all clients update instantly
+Server broadcasts →
+All connected clients update instantly
 ```
 
-* Room-based socket channels
-* Low-latency broadcasting
-* Handles multi-user editing
+* Room-scoped WebSocket channels
+* Bidirectional communication using Socket.io
+* Live updates across multiple clients
 
 ---
 
-### 💾 Code Persistence
+### 👥 Live User Presence
 
-* Autosave via REST (`PATCH /code`)
-* Version snapshots stored separately
-* Time-based history tracking
-
----
-
-### 🧠 Version History
-
-* Snapshot-based system
-* Restore previous states
-* Tracks user + timestamp
+* Real connected users (no mock data)
+* Multiple sessions per user handled independently
+* Dynamic join/leave updates
 
 ---
 
-## 📡 API Surface
+### 💾 Persistent State (Autosave + Recovery)
 
-### Auth
-
-* `POST /api/auth/register`
-* `POST /api/auth/login`
-
----
-
-### Rooms
-
-* `POST /api/rooms/create`
-* `POST /api/rooms/join`
-* `GET /api/rooms/my-rooms`
-* `GET /api/rooms/:roomId`
-* `PATCH /api/rooms/:roomId/code`
+* Periodic autosave to MongoDB
+* Late joiners load latest code state
+* State survives server restarts
 
 ---
 
-### Versions
+### 🧠 Version History System
 
-* `POST /api/versions/save`
-* `GET /api/versions/:roomId`
+* Snapshot-based versioning
+* Timestamped history
+* Restore previous code states
 
 ---
 
-## 🔌 Socket Events (REAL CORE)
+### ▶️ Real Code Execution (Judge0)
 
-### Client → Server
-
-```id="n8w8rx"
-join-room        { roomId }
-code-change      { roomId, code }
-cursor-move      { roomId, position }
+```text
+Frontend → Backend → Judge0 API → Backend → Frontend
 ```
 
+* Supports multiple languages (JS, Python, C++)
+* Secure sandbox execution (no local execution risk)
+* Displays real stdout/stderr output
+
 ---
 
-### Server → Client
+## 🏗️ System Architecture
 
-```id="wq7pxz"
-code-update      { code }
-user-joined      { user }
-cursor-update    { userId, position }
+```text
+┌────────────────────┐
+│   React Frontend   │
+│ (Monaco Editor UI) │
+└─────────┬──────────┘
+          │ REST (HTTP)
+          ▼
+┌────────────────────┐
+│   Express Server   │
+│  (API + Auth)      │
+└─────────┬──────────┘
+          │
+          ├───────────────┐
+          ▼               ▼
+┌───────────────┐   ┌────────────────┐
+│   MongoDB     │   │  Socket.io     │
+│ (Persistence) │   │ (Real-Time)    │
+└───────────────┘   └────────────────┘
+          │
+          ▼
+┌────────────────────┐
+│    Judge0 API      │
+│ (Code Execution)   │
+└────────────────────┘
 ```
 
 ---
 
 ## 📂 Project Structure
 
-```id="4jocqk"
-devnest-backend/
-├── server.js
-├── config/db.js
-├── models/
-├── routes/
-├── middleware/
+```text
+DevNest/
+│
+├── src/                     # Frontend (React + Vite)
+│   ├── api/                # Axios configuration
+│   ├── context/            # Auth state management
+│   ├── pages/              # Login, Dashboard, Room
+│   ├── components/         # UsersPanel, VersionHistory
+│   └── hooks/              # Socket logic
+│
+└── devnest-backend/
+    ├── server.js           # Entry point + Socket.io
+    ├── config/             # DB connection
+    ├── models/             # User, Room, Version
+    ├── routes/             # Auth, Rooms, Versions, Execute
+    └── middleware/         # JWT auth
 ```
 
 ---
 
-## 🚀 Setup
+## 🔌 API Overview
 
-```id="rkt3xf"
+### Auth
+
+* `POST /api/auth/register`
+* `POST /api/auth/login`
+
+### Rooms
+
+* `POST /api/rooms/create`
+* `POST /api/rooms/join`
+* `GET /api/rooms/my-rooms`
+* `PATCH /api/rooms/:id/code`
+
+### Versions
+
+* `POST /api/versions/save`
+* `GET /api/versions/:roomId`
+
+### Execution
+
+* `POST /api/execute`
+
+---
+
+## 🔄 Real-Time Event Flow
+
+### Client → Server
+
+```text
+join-room
+code-change
+cursor-move (optional)
+```
+
+### Server → Client
+
+```text
+code-update
+user-joined
+user-left
+```
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Backend
+
+```bash
+cd devnest-backend
 npm install
 copy .env.example .env
 npm run dev
@@ -157,53 +198,71 @@ npm run dev
 
 ---
 
-## 🌍 Environment Variables
+### 2️⃣ Frontend
 
-```id="j9u6h7"
+```bash
+npm install
+npm run dev
+```
+
+---
+
+### 🌍 Environment Variables
+
+```env
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/devnest
-JWT_SECRET=your_secret
+JWT_SECRET=your_secret_key
 ```
 
 ---
 
-## 🧪 Health Check
+## 🧪 How to Verify Functionality
 
-```id="5pcr0y"
-GET /api/health
-```
-
----
-
-## ⚠️ Design Trade-offs
-
-* Uses **full document sync** (not OT/CRDT yet)
-* Last-write-wins strategy
-* No offline sync
+1. Register & login
+2. Create a room
+3. Open same room in two tabs
+4. Type → verify real-time sync
+5. Save version → check history
+6. Run code → verify actual output
 
 ---
 
-## 🚀 What Makes This Strong
+## ⚠️ Known Limitations
 
-* Separates real-time + persistence layers cleanly
-* Uses room-based socket architecture
-* Demonstrates scalable system thinking
-* Not just CRUD — actual collaborative system
+* Uses **last-write-wins** (no OT/CRDT)
+* No distributed scaling (single server instance)
+* Execution depends on external Judge0 service
+* No rate limiting or advanced security layers
 
 ---
 
-## 🔮 Next Iteration
+## 🔮 Future Improvements
 
-* Operational Transform / CRDT
-* Differential updates instead of full state
-* Rate limiting + throttling
-* Horizontal scaling with Redis adapter
+* CRDT / Operational Transform for conflict resolution
+* Redis adapter for horizontal scaling (Socket.io)
+* Cursor presence visualization
+* Docker-based execution environment
+* Deployment (Docker + Cloud)
+
+---
+
+## 🧠 Key Engineering Takeaways
+
+* Separation of **real-time vs persistence layers**
+* Handling **multi-client synchronization**
+* Secure execution of arbitrary user code
+* Designing scalable backend architecture
 
 ---
 
 ## 👨‍💻 Author
 
 Nehal Verma
-B.Tech CCE — Backend + Systems Engineering Focus
+B.Tech CCE — Full Stack & Systems Engineering
 
 ---
+
+## 📄 License
+
+For academic and educational use.
