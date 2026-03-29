@@ -1,8 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import { useAuth } from "../context/AuthContext";
 import { STARTER_CODE, LANGUAGE_LABELS, MOCK_ROOMS } from "../context/mockData";
+import API from "../api/axios";
+import useSocket from "../hooks/useSocket";
 import UsersPanel from "../components/UsersPanel";
 import VersionHistory from "../components/VersionHistory";
 import "./Room.css";
@@ -18,7 +20,6 @@ export default function Room() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Find room info (or create generic one)
   const roomInfo = MOCK_ROOMS.find((r) => r.id === id) || {
     name: `Room ${id}`,
     language: "javascript",
@@ -34,32 +35,92 @@ export default function Room() {
   const [saveFlash, setSaveFlash]     = useState(false);
   const [showHistory, setShowHistory] = useState(true);
   const [showUsers, setShowUsers]     = useState(true);
+  const [liveUsers, setLiveUsers]     = useState([]);
+
+  // ── Socket.io ─────────────────────────────────────────────
+  const { emitCodeChange, emitLanguageChange } = useSocket({
+    roomId: id,
+    user,
+    onCodeChange:     (incomingCode) => setCode(incomingCode),
+    onLanguageChange: (incomingLang) => setLanguage(incomingLang),
+    onUsersChange:    (users)        => setLiveUsers(users),
+  });
+
+  // ── Load room + version history on mount ──────────────────
+  useEffect(() => {
+    const loadRoom = async () => {
+      try {
+        const roomRes = await API.get(`/rooms/${id}`);
+        const r = roomRes.data.room;
+        if (r.currentCode) setCode(r.currentCode);
+        if (r.language)    setLanguage(r.language);
+      } catch (err) {}
+    };
+
+    const loadVersions = async () => {
+      try {
+        const vRes = await API.get(`/versions/${id}`);
+        setVersions(vRes.data.versions);
+      } catch (err) {}
+    };
+
+    loadRoom();
+    loadVersions();
+  }, [id]);
+
+  // ── Autosave to DB every 10 seconds ───────────────────────
+  // This means late joiners always load the latest code from MongoDB
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await API.patch(`/rooms/${id}/code`, { code, language });
+      } catch (err) {}
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [code, language, id]);
+
+  // ── Handlers ──────────────────────────────────────────────
+  const handleCodeChange = useCallback((val) => {
+    const newCode = val || "";
+    setCode(newCode);
+    emitCodeChange(newCode);
+  }, [emitCodeChange]);
 
   const handleLangChange = (lang) => {
     setLanguage(lang);
     setCode(STARTER_CODE[lang]);
+    emitLanguageChange(lang);
   };
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 400)); // Simulate save
-
-    const version = {
-      id: Date.now(),
-      code,
-      timestamp: formatTime(new Date()),
-      preview: code.split("\n").find((l) => l.trim()) || "(empty)",
-      language,
-    };
-
-    setVersions((prev) => [...prev, version]);
-    setIsSaving(false);
-    setSaveFlash(true);
-    setTimeout(() => setSaveFlash(false), 1500);
-  }, [code, language]);
+    try {
+      const res = await API.post("/versions/save", { roomId: id, code });
+      const v = res.data.version;
+      setVersions((prev) => [{
+        id:        v._id,
+        code:      v.code,
+        preview:   v.preview,
+        timestamp: new Date(v.createdAt).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" }),
+        savedBy:   v.savedBy?.name || "You",
+      }, ...prev]);
+    } catch (err) {
+      const version = {
+        id:        Date.now(),
+        code,
+        timestamp: formatTime(new Date()),
+        preview:   code.split("\n").find((l) => l.trim()) || "(empty)",
+        language,
+      };
+      setVersions((prev) => [...prev, version]);
+    } finally {
+      setIsSaving(false);
+      setSaveFlash(true);
+      setTimeout(() => setSaveFlash(false), 1500);
+    }
+  }, [code, language, id]);
 
   const handleRun = useCallback(() => {
-    // Mock run — shows a fake output panel
     setOutput({
       lang: language,
       result: language === "javascript"
@@ -74,12 +135,12 @@ export default function Room() {
 
   const handleRestore = useCallback((restoredCode) => {
     setCode(restoredCode);
+    emitCodeChange(restoredCode);
     setShowOutput(false);
-  }, []);
+  }, [emitCodeChange]);
 
   return (
     <div className="room-page">
-      {/* ── Top Navbar ─────────────────────────────────────────────────────── */}
       <nav className="room-nav">
         <div className="room-nav-left">
           <button className="btn btn-ghost btn-sm room-back" onClick={() => navigate("/dashboard")}>
@@ -101,7 +162,6 @@ export default function Room() {
         </div>
 
         <div className="room-nav-center">
-          {/* Language Selector */}
           <div className="lang-select-group">
             {Object.entries(LANGUAGE_LABELS).map(([key, label]) => (
               <button
@@ -116,46 +176,24 @@ export default function Room() {
         </div>
 
         <div className="room-nav-right">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setShowUsers((v) => !v)}
-            title="Toggle users panel"
-          >
-            👥
-          </button>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setShowHistory((v) => !v)}
-            title="Toggle version history"
-          >
-            📜
-          </button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowUsers((v) => !v)} title="Toggle users panel">👥</button>
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowHistory((v) => !v)} title="Toggle version history">📜</button>
           <button
             className={`btn btn-sm ${saveFlash ? "btn-green" : "btn-surface"}`}
             onClick={handleSave}
             disabled={isSaving}
           >
-            {isSaving ? (
-              <><span className="spinner-dark" /> Saving…</>
-            ) : saveFlash ? (
-              "✓ Saved!"
-            ) : (
-              "💾 Save"
-            )}
+            {isSaving ? <><span className="spinner-dark" /> Saving…</> : saveFlash ? "✓ Saved!" : "💾 Save"}
           </button>
-          <button className="btn btn-green btn-sm" onClick={handleRun}>
-            ▶ Run
-          </button>
+          <button className="btn btn-green btn-sm" onClick={handleRun}>▶ Run</button>
           <div className="user-chip">
-            <div className="user-chip-avatar">{user?.avatar || "YO"}</div>
+            <div className="user-chip-avatar">{user?.avatar || "??"}</div>
             <span className="user-chip-name">{user?.name}</span>
           </div>
         </div>
       </nav>
 
-      {/* ── Editor Area ────────────────────────────────────────────────────── */}
       <div className="room-body">
-        {/* Editor Main */}
         <div className="editor-area">
           <div className="editor-topbar">
             <div className="editor-file-tab">
@@ -174,7 +212,7 @@ export default function Room() {
               height="100%"
               language={MONACO_LANG[language]}
               value={code}
-              onChange={(val) => setCode(val || "")}
+              onChange={handleCodeChange}
               theme="vs-dark"
               options={{
                 fontSize: 14,
@@ -195,7 +233,6 @@ export default function Room() {
             />
           </div>
 
-          {/* Output Panel */}
           {showOutput && output && (
             <div className="output-panel">
               <div className="output-header">
@@ -205,12 +242,7 @@ export default function Room() {
                 </div>
                 <div className="output-meta">
                   <span className="output-time">⏱ {output.time}</span>
-                  <button
-                    className="output-close"
-                    onClick={() => setShowOutput(false)}
-                  >
-                    ✕
-                  </button>
+                  <button className="output-close" onClick={() => setShowOutput(false)}>✕</button>
                 </div>
               </div>
               <pre className="output-content">{output.result}</pre>
@@ -218,8 +250,9 @@ export default function Room() {
           )}
         </div>
 
-        {/* Right Panels */}
-        {showUsers && <UsersPanel />}
+        {showUsers && (
+          <UsersPanel liveUsers={liveUsers} currentUser={user} />
+        )}
         {showHistory && (
           <VersionHistory versions={versions} onRestore={handleRestore} />
         )}

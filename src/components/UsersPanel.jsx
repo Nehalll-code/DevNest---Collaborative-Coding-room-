@@ -1,39 +1,48 @@
-import { MOCK_USERS } from "../context/mockData";
+// components/UsersPanel.jsx
+// Now accepts liveUsers from Room.jsx (real Socket.io data)
+// Falls back to a single "You" entry if socket hasn't connected yet
+
 import "./UsersPanel.css";
 
-const STATUS_LABEL = {
-  typing:  { text: "Typing…",  color: "#3ddc84" },
-  idle:    { text: "Idle",     color: "#ffd93d" },
-  viewing: { text: "Viewing",  color: "#4da6ff" },
-};
+export default function UsersPanel({ liveUsers = [], currentUser }) {
+  // If socket hasn't sent data yet, show just the current user
+  const users = liveUsers.length > 0
+    ? liveUsers
+    : currentUser
+      ? [{ userId: currentUser.id, name: currentUser.name, avatar: currentUser.avatar }]
+      : [];
 
-export default function UsersPanel() {
   return (
     <aside className="users-panel">
       <div className="panel-header">
         <span className="panel-title">Connected</span>
-        <span className="panel-badge">{MOCK_USERS.length}</span>
+        <span className="panel-badge">{users.length}</span>
       </div>
 
       <ul className="users-list">
-        {MOCK_USERS.map((u) => {
-          const s = STATUS_LABEL[u.status];
+        {users.map((u, i) => {
+          const isYou = u.userId === currentUser?.id || u.userId === currentUser?._id;
+          // Generate a consistent colour from the name
+          const colors = ["#6c63ff", "#10d9a0", "#f5a623", "#e05c5c", "#4da6ff", "#ff6bcb"];
+          const color  = colors[(u.name?.charCodeAt(0) || 0) % colors.length];
+          const initials = u.avatar || u.name?.slice(0, 2).toUpperCase() || "??";
+
           return (
-            <li key={u.id} className="user-item">
-              <div className="user-item-avatar" style={{ background: u.color }}>
-                {u.initials}
+            <li key={u.socketId || i} className="user-item">
+              <div className="user-item-avatar" style={{ background: color }}>
+                {initials}
                 <span
                   className="user-status-dot"
-                  style={{ background: s.color }}
+                  style={{ background: "#3ddc84" }}
                 />
               </div>
               <div className="user-item-info">
                 <div className="user-item-name">
                   {u.name}
-                  {u.id === 1 && <span className="user-you-tag">you</span>}
+                  {isYou && <span className="user-you-tag">you</span>}
                 </div>
-                <div className="user-item-status" style={{ color: s.color }}>
-                  {s.text}
+                <div className="user-item-status" style={{ color: "#3ddc84" }}>
+                  Active
                 </div>
               </div>
             </li>
@@ -55,7 +64,7 @@ export default function UsersPanel() {
         </div>
         <div className="room-info-row">
           <span className="room-info-key">Socket</span>
-          <span className="room-info-val" style={{ color: "var(--text3)" }}>Planned</span>
+          <span className="room-info-val" style={{ color: "#3ddc84" }}>Live</span>
         </div>
       </div>
     </aside>

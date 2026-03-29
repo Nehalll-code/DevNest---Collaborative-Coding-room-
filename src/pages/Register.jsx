@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import API from "../api/axios";
 import "./Auth.css";
 
 export default function Register() {
@@ -45,10 +46,22 @@ export default function Register() {
     }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-
-    login({ name: form.name.trim(), email: form.email });
-    navigate("/dashboard");
+    try {
+      const res = await API.post("/auth/register", {
+        name:     form.name.trim(),
+        email:    form.email,
+        password: form.password,
+      });
+      login({ token: res.data.token, ...res.data.user });
+      navigate("/dashboard");
+    } catch (err) {
+      const msg = err.response?.data?.message || "Registration failed";
+      setErrors({ email: msg });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const strength = (() => {

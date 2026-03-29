@@ -63,6 +63,139 @@
   --t-nav:rgba(255,251,240,0.92);
 }
 
+/* GITHUB × MINECRAFT DARK */
+.theme-github.mode-dark {
+  --a: #4ade80; --a2: #86efac; --a3: #bbf7d0;
+  --ag: rgba(74,222,128,0.35); --ab: rgba(74,222,128,0.1);
+  --t-bg:#0d1117; --t-bg2:#090d12; --t-surface:#161b22; --t-surface2:#1c2128;
+  --t-surface3:#21262d; --t-surface4:#30363d;
+  --t-border:#30363d; --t-border2:#3d444d; --t-border3:#484f58;
+  --t-text:#e6edf3; --t-text2:#7d8590; --t-text3:#484f58; --t-text4:#2d333b;
+  --t-nav:rgba(13,17,23,0.97);
+  --mc-font: 'Press Start 2P', monospace;
+  --mc-dirt: #5c4033;
+  --mc-grass: #4ade80;
+  --mc-stone: #9ca3af;
+  --mc-wood: #92400e;
+  --mc-sky: #38bdf8;
+  --mc-creeper: #4ade80;
+}
+/* GITHUB × MINECRAFT LIGHT */
+.theme-github.mode-light {
+  --a: #16a34a; --a2: #22c55e; --a3: #4ade80;
+  --ag: rgba(22,163,74,0.3); --ab: rgba(22,163,74,0.1);
+  --t-bg:#f0f9f0; --t-bg2:#e8f5e8; --t-surface:#ffffff; --t-surface2:#f6faf6;
+  --t-surface3:#eaf4ea; --t-surface4:#d4ead4;
+  --t-border:#c6e2c6; --t-border2:#aed4ae; --t-border3:#8ec08e;
+  --t-text:#0f2010; --t-text2:#2d5a2d; --t-text3:#5a8a5a; --t-text4:#8ab88a;
+  --t-nav:rgba(240,249,240,0.95);
+  --mc-font: 'Press Start 2P', monospace;
+  --mc-dirt: #7c5c3a;
+  --mc-grass: #22c55e;
+}
+
+/* ── Load pixel font for github theme ── */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+/* ── Minecraft global overrides ── */
+.theme-github * { image-rendering: pixelated; }
+
+.theme-github .dash-root,
+.theme-github body { font-family: var(--mc-font) !important; }
+
+/* Pixelated borders — replace all rounded corners with sharp blocks */
+.theme-github .dash-nav         { border-radius: 0; border-bottom: 4px solid var(--a); }
+.theme-github .hero-left        { border-radius: 0; border: 3px solid var(--t-border2); border-left: 6px solid var(--a); box-shadow: 6px 6px 0 var(--t-border3); }
+.theme-github .stat-card        { border-radius: 0; border: 3px solid var(--t-border2); box-shadow: 4px 4px 0 var(--t-border3); }
+.theme-github .stat-card:hover  { border-color: var(--a); box-shadow: 4px 4px 0 var(--a); transform: translate(-2px,-2px); }
+.theme-github .room-card        { border-radius: 0; border: 3px solid var(--t-border2); box-shadow: 4px 4px 0 var(--t-border3); }
+.theme-github .room-card.hovered{ border-color: var(--a); box-shadow: 4px 4px 0 var(--a) !important; transform: translate(-2px,-2px); }
+.theme-github .side-panel       { border-radius: 0; border: 3px solid var(--t-border2); box-shadow: 4px 4px 0 var(--t-border3); }
+.theme-github .modal            { border-radius: 0; border: 4px solid var(--a); box-shadow: 8px 8px 0 var(--t-border3); }
+.theme-github .btn              { border-radius: 0 !important; }
+.theme-github .btn-primary      { border: 3px solid var(--a2); box-shadow: 3px 3px 0 rgba(0,0,0,0.5); }
+.theme-github .btn-primary:hover{ transform: translate(-1px,-1px); box-shadow: 4px 4px 0 rgba(0,0,0,0.5) !important; }
+.theme-github .btn-ghost        { border-radius: 0 !important; }
+.theme-github .form-input       { border-radius: 0 !important; border: 3px solid var(--t-border2) !important; }
+.theme-github .form-input:focus { border-color: var(--a) !important; box-shadow: 3px 3px 0 var(--ab) !important; }
+.theme-github .join-input-wrap  { border-radius: 0; border: 3px solid var(--t-border2); }
+.theme-github .join-btn         { border-radius: 0; border: 3px solid var(--a2); box-shadow: 3px 3px 0 rgba(0,0,0,0.4); }
+.theme-github .room-enter-btn   { border-radius: 0; border: 2px solid var(--t-border2); }
+.theme-github .nav-avatar       { border-radius: 0; border: 2px solid var(--a); }
+.theme-github .nav-user-chip    { border-radius: 0; border: 2px solid var(--t-border2); }
+.theme-github .nav-search-wrap  { border-radius: 0; }
+.theme-github .badge            { border-radius: 0 !important; }
+.theme-github .section-badge    { border-radius: 0; }
+.theme-github .create-big-btn   { border-radius: 0; border: 3px solid var(--a); box-shadow: 3px 3px 0 rgba(0,0,0,0.4); }
+.theme-github .lang-row-track   { border-radius: 0; }
+.theme-github .lang-row-fill    { border-radius: 0; }
+.theme-github .mode-toggle      { border-radius: 0; }
+.theme-github .theme-dot-btn    { border-radius: 0 !important; }
+.theme-github .nav-brand-tag    { border-radius: 0; }
+.theme-github .nav-logo         { border-radius: 0; }
+
+/* Pixel font sizing — Press Start 2P needs smaller sizes */
+.theme-github .nav-brand-name   { font-family: var(--mc-font); font-size: 12px; letter-spacing: 0; }
+.theme-github .nav-brand-tag    { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .hero-eyebrow     { font-family: var(--mc-font); font-size: 7px; letter-spacing: 1px; }
+.theme-github .hero-title       { font-family: var(--mc-font); font-size: 22px; letter-spacing: -1px; line-height: 1.4; }
+.theme-github .hero-title-sub   { font-family: var(--mc-font); font-size: 14px; }
+.theme-github .hero-desc        { font-family: var(--mc-font); font-size: 8px; line-height: 2; }
+.theme-github .stat-card-val    { font-family: var(--mc-font); font-size: 28px; }
+.theme-github .stat-card-label  { font-family: var(--mc-font); font-size: 7px; letter-spacing: 0.5px; }
+.theme-github .stat-card-icon   { font-size: 20px; }
+.theme-github .section-title    { font-family: var(--mc-font); font-size: 8px; letter-spacing: 1px; }
+.theme-github .room-card-name   { font-family: var(--mc-font); font-size: 10px; }
+.theme-github .room-card-meta   { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .room-enter-btn   { font-family: var(--mc-font); font-size: 8px; letter-spacing: 0.5px; }
+.theme-github .side-panel-title { font-family: var(--mc-font); font-size: 8px; }
+.theme-github .side-panel-sub   { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .modal-eyebrow    { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .modal-title      { font-family: var(--mc-font); font-size: 14px; }
+.theme-github .status-row-label { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .status-row-val   { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .lang-row-name    { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .lang-row-count   { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .join-prefix      { font-family: var(--mc-font); font-size: 12px; }
+.theme-github .join-input       { font-family: var(--mc-font); font-size: 9px; }
+.theme-github .terminal-prompt,
+.theme-github .terminal-text,
+.theme-github .terminal-cursor  { font-family: var(--mc-font); font-size: 9px; }
+.theme-github .btn              { font-family: var(--mc-font) !important; font-size: 8px !important; letter-spacing: 0.3px; }
+.theme-github .form-label       { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .form-input       { font-family: var(--mc-font) !important; font-size: 9px !important; }
+.theme-github .lang-pick        { font-family: var(--mc-font); font-size: 8px; }
+.theme-github .empty-ascii      { font-family: var(--mc-font); font-size: 9px; }
+.theme-github .nav-user-name    { font-family: var(--mc-font); font-size: 8px; }
+.theme-github .nav-user-status  { font-family: var(--mc-font); font-size: 6px; }
+.theme-github .room-card-id     { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .section-badge    { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .field-error      { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .form-error       { font-family: var(--mc-font); font-size: 7px; }
+.theme-github .meta-sep         { font-family: var(--mc-font); }
+
+/* Minecraft hero left — grass block style top border */
+.theme-github .hero-left::before { background: repeating-linear-gradient(90deg, var(--a) 0px, var(--a) 8px, var(--a2) 8px, var(--a2) 16px); height: 4px; }
+
+/* Pixel grid background for dark mode */
+.theme-github.mode-dark .dash-root { background-image: repeating-linear-gradient(0deg, rgba(74,222,128,0.03) 0px, rgba(74,222,128,0.03) 1px, transparent 1px, transparent 32px), repeating-linear-gradient(90deg, rgba(74,222,128,0.03) 0px, rgba(74,222,128,0.03) 1px, transparent 1px, transparent 32px); }
+
+/* Minecraft dirt texture on nav */
+.theme-github .dash-nav::after { content:''; position:absolute; bottom:-4px; left:0; right:0; height:4px; background:repeating-linear-gradient(90deg, #5c4033 0px, #5c4033 8px, #7c5c3a 8px, #7c5c3a 16px, #4a3020 16px, #4a3020 24px, #6b4c30 24px, #6b4c30 32px); pointer-events:none; }
+
+/* Glitch in github theme uses green */
+.theme-github .glitch { color: var(--a2); }
+.theme-github.mode-dark .glitch::before { color: #f87171; }
+.theme-github.mode-dark .glitch::after  { color: var(--a); }
+
+/* Creeper-green accent on stat card bar */
+.theme-github .stat-card::after { background: linear-gradient(90deg, var(--a), var(--a2)); opacity: 0; }
+
+/* Blocky scrollbar */
+.theme-github ::-webkit-scrollbar       { width: 8px; }
+.theme-github ::-webkit-scrollbar-thumb { border-radius: 0; background: var(--a); }
+.theme-github ::-webkit-scrollbar-track { background: var(--t-surface2); }
+
 /* ─── ROOT ──────────────────────────────────────────────────────────────────── */
 .dash-root {
   min-height: 100vh;
@@ -139,6 +272,7 @@
 .theme-dot-purple { background:linear-gradient(135deg,#6c63ff,#a855f7); }
 .theme-dot-cyan   { background:linear-gradient(135deg,#00d4c8,#06b6d4); }
 .theme-dot-amber  { background:linear-gradient(135deg,#f59e0b,#ef4444); }
+.theme-dot-github { background:linear-gradient(180deg,#4ade80 0%,#4ade80 40%,#5c4033 40%,#5c4033 100%); border-radius:0 !important; border:2px solid #22c55e !important; }
 
 .theme-divider { width:1px;height:22px;background:var(--t-border2);margin:0 2px; }
 

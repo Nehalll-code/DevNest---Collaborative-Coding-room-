@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { MOCK_ROOMS, LANGUAGE_LABELS } from "../context/mockData";
 import "./Dashboard.css";
+import API from "../api/axios";
 
 const LANG_ICONS  = { javascript:"JS", python:"PY", cpp:"C+" };
 const LANG_COLORS = {
@@ -15,6 +16,7 @@ const THEMES = [
   { id:"purple", label:"Purple", dot:"theme-dot-purple" },
   { id:"cyan",   label:"Cyan",   dot:"theme-dot-cyan"   },
   { id:"amber",  label:"Amber",  dot:"theme-dot-amber"  },
+  { id:"github", label:"GitHub", dot:"theme-dot-github" },
 ];
 
 function getRoleBadge(role){ return {Owner:"badge-owner",Editor:"badge-editor",Viewer:"badge-viewer"}[role]||"badge-viewer"; }
@@ -32,7 +34,6 @@ function Counter({ value }) {
   }, [value]);
   return <span>{n}</span>;
 }
-
 function GlitchText({ text }) {
   return <span className="glitch" data-text={text}>{text}</span>;
 }
@@ -40,10 +41,10 @@ function GlitchText({ text }) {
 export default function Dashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-
   const [colorTheme, setColorTheme] = useState("purple");
   const [mode, setMode] = useState("dark");
-  const [rooms, setRooms] = useState(MOCK_ROOMS);
+  //const [rooms, setRooms] = useState(MOCK_ROOMS);
+  const [rooms, setRooms] = useState([]);
   const [joinInput, setJoinInput] = useState("");
   const [joinError, setJoinError] = useState("");
   const [showCreate, setShowCreate] = useState(false);
@@ -55,6 +56,43 @@ export default function Dashboard() {
   const canvasRef = useRef(null);
 
   const isDark = mode === "dark";
+
+  // ── Fetch rooms from backend on mount ─────────────────────
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await API.get("/rooms/my-rooms");
+        // Backend returns roomId (short string) and _id (mongo id).
+        // Normalise to the shape the rest of the component expects.
+        const normalised = res.data.rooms.map((r) => ({
+          id:          r.roomId,          // used for navigation + card key
+          name:        r.name,
+          language:    r.language,
+          role:        r.members?.find(
+                         (m) => (m.user?._id || m.user) === r.owner?._id?.toString()
+                               || (m.user?._id || m.user) === r.owner?.toString()
+                       )?.role
+                       ? capitalise(r.members.find(
+                           (m) => (m.user?._id || m.user)?.toString() === r.owner?.toString()
+                         )?.role)
+                       : "Editor",
+          owner:       r.owner?.name || "Unknown",
+          members:     r.members?.length || 1,
+          lastEdited:  r.updatedAt
+                         ? new Date(r.updatedAt).toLocaleDateString("en-IN", { day:"numeric", month:"short" })
+                         : "—",
+          description: `${r.language} workspace`,
+        }));
+        setRooms(normalised);
+      } catch (err) {
+        // Backend offline — keep empty list; UI shows empty state cleanly
+        console.warn("Could not reach backend, rooms list is empty.", err.message);
+      }
+    };
+    fetchRooms();
+  }, []);
+
+  const capitalise = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : "Editor";
 
   // Scanline
   useEffect(()=>{
@@ -71,7 +109,7 @@ export default function Dashboard() {
     c.width = c.offsetWidth;
     c.height = c.offsetHeight;
     ctx.clearRect(0,0,c.width,c.height);
-    const colors = { purple:"rgba(108,99,255,0.07)", cyan:"rgba(0,212,200,0.07)", amber:"rgba(245,158,11,0.07)" };
+    const colors = { purple:"rgba(108,99,255,0.07)", cyan:"rgba(0,212,200,0.07)", amber:"rgba(245,158,11,0.07)", github:"rgba(74,222,128,0.05)" };
     ctx.strokeStyle = colors[colorTheme];
     ctx.lineWidth = 1;
     const size = 44;
@@ -83,19 +121,49 @@ export default function Dashboard() {
     r.name.toLowerCase().includes(search.toLowerCase()) || r.language.includes(search.toLowerCase())
   );
 
-  const handleJoin = () => {
-    if(!joinInput.trim()){ setJoinError("Enter a room ID"); return; }
+  const handleJoin = async () => {
+    if (!joinInput.trim()) { setJoinError("Enter a room ID"); return; }
+    try {
+      await API.post("/rooms/join", { roomId: joinInput.trim() });
+    } catch (err) {
+      const msg = err.response?.data?.message;
+      if (msg === "Room not found") { setJoinError("Room not found — check the ID"); return; }
+      // Any other error (e.g. backend down) — navigate anyway for demo
+    }
     navigate(`/room/${joinInput.trim()}`);
   };
 
-  const handleCreate = () => {
-    if(!newRoom.name.trim()){ setCreateError("Room name is required"); return; }
-    const id = `room_${Math.random().toString(36).slice(2,8)}`;
-    const created = { id, name:newRoom.name.trim(), language:newRoom.language, role:"Owner", owner:user.name, members:1, lastEdited:"Just now", description:"New workspace." };
-    setRooms(prev => [created, ...prev]);
-    setShowCreate(false);
-    setNewRoom({ name:"", language:"javascript" });
-    navigate(`/room/${id}`);
+  const handleCreate = async () => {
+    if (!newRoom.name.trim()) { setCreateError("Room name is required"); return; }
+    try {
+      const res = await API.post("/rooms/create", {
+        name:     newRoom.name.trim(),
+        language: newRoom.language,
+      });
+      const r = res.data.room;
+      // Optimistically add to list so the UI updates immediately
+      setRooms(prev => [{
+        id:          r.roomId,
+        name:        r.name,
+        language:    r.language,
+        role:        "Owner",
+        owner:       user.name,
+        members:     1,
+        lastEdited:  "Just now",
+        description: `${r.language} workspace`,
+      }, ...prev]);
+      setShowCreate(false);
+      setNewRoom({ name: "", language: "javascript" });
+      navigate(`/room/${r.roomId}`);
+    } catch (err) {
+      // Fallback: create local room if backend is down (demo mode)
+      const id = `room_${Math.random().toString(36).slice(2, 8)}`;
+      const created = { id, name: newRoom.name.trim(), language: newRoom.language, role: "Owner", owner: user.name, members: 1, lastEdited: "Just now", description: "New workspace." };
+      setRooms(prev => [created, ...prev]);
+      setShowCreate(false);
+      setNewRoom({ name: "", language: "javascript" });
+      navigate(`/room/${id}`);
+    }
   };
 
   return (

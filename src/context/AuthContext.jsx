@@ -12,19 +12,22 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const login = ({ name, email }) => {
+  const login = ({ token, name, email, id }) => {
     const userData = {
       name,
       email,
-      token: `eyJhbGciOiJIUzI1NiJ9.mock_jwt_${Date.now()}`,
+      id,
       avatar: name.slice(0, 2).toUpperCase(),
+      token,
     };
-    localStorage.setItem("cc_user", JSON.stringify(userData));
+    localStorage.setItem("cc_user", JSON.stringify(userData)); // keeps user info
+    localStorage.setItem("token", token);                      // axios interceptor reads this
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("cc_user");
+    localStorage.removeItem("token");
     setUser(null);
   };
 

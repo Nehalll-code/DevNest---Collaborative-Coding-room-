@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import API from "../api/axios";
 import "./Auth.css";
 
 export default function Login() {
@@ -37,12 +38,22 @@ export default function Login() {
     }
 
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 900));
-
-    // Mock login — any valid email/password works
-    login({ name: form.email.split("@")[0], email: form.email });
-    navigate("/dashboard");
+    try {
+      const res = await API.post("/auth/login", {
+        email:    form.email,
+        password: form.password,
+      });
+      // Store the JWT token then hydrate user in AuthContext
+      login({ token: res.data.token, ...res.data.user });
+      navigate("/dashboard");
+    } catch (err) {
+      const msg = err.response?.data?.message || "Login failed";
+      setErrors({ password: msg });
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
