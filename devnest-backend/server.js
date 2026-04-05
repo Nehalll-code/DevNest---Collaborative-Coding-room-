@@ -9,6 +9,7 @@ const connectDB     = require("./config/db");
 const authRoutes    = require("./routes/authRoutes");
 const roomRoutes    = require("./routes/roomRoutes");
 const versionRoutes = require("./routes/versionRoutes");
+const executeRoutes = require("./routes/executeRoutes");
 
 connectDB();
 
@@ -26,6 +27,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth",     authRoutes);
 app.use("/api/rooms",    roomRoutes);
 app.use("/api/versions", versionRoutes);
+app.use("/api/execute",  executeRoutes);
 
 app.use((req, res) => res.status(404).json({ message: `Route ${req.originalUrl} not found` }));
 app.use((err, req, res, next) => { console.error(err.stack); res.status(500).json({ message: "Internal server error" }); });

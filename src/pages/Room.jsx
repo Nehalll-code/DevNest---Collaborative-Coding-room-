@@ -37,7 +37,6 @@ export default function Room() {
   const [showUsers, setShowUsers]     = useState(true);
   const [liveUsers, setLiveUsers]     = useState([]);
 
-  // ── Socket.io ─────────────────────────────────────────────
   const { emitCodeChange, emitLanguageChange } = useSocket({
     roomId: id,
     user,
@@ -46,7 +45,6 @@ export default function Room() {
     onUsersChange:    (users)        => setLiveUsers(users),
   });
 
-  // ── Load room + version history on mount ──────────────────
   useEffect(() => {
     const loadRoom = async () => {
       try {
@@ -56,20 +54,16 @@ export default function Room() {
         if (r.language)    setLanguage(r.language);
       } catch (err) {}
     };
-
     const loadVersions = async () => {
       try {
         const vRes = await API.get(`/versions/${id}`);
         setVersions(vRes.data.versions);
       } catch (err) {}
     };
-
     loadRoom();
     loadVersions();
   }, [id]);
 
-  // ── Autosave to DB every 10 seconds ───────────────────────
-  // This means late joiners always load the latest code from MongoDB
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -79,7 +73,6 @@ export default function Room() {
     return () => clearInterval(interval);
   }, [code, language, id]);
 
-  // ── Handlers ──────────────────────────────────────────────
   const handleCodeChange = useCallback((val) => {
     const newCode = val || "";
     setCode(newCode);
@@ -120,24 +113,32 @@ export default function Room() {
     }
   }, [code, language, id]);
 
-  const handleRun = useCallback(() => {
-    setOutput({
-      lang: language,
-      result: language === "javascript"
-        ? "fibonacci(10) = 55\nDoubled: [ 2, 4, 6, 8, 10 ]"
-        : language === "python"
-        ? "fibonacci(10) = 55\nDoubled: [2, 4, 6, 8, 10]"
-        : "fibonacci(10) = 55\n2 4 6 8 10",
-      time: "12ms",
-    });
-    setShowOutput(true);
-  }, [language]);
-
   const handleRestore = useCallback((restoredCode) => {
     setCode(restoredCode);
     emitCodeChange(restoredCode);
     setShowOutput(false);
   }, [emitCodeChange]);
+
+  const handleRun = useCallback(async () => {
+    setOutput({ result: "Running…", time: "…", loading: true });
+    setShowOutput(true);
+    try {
+      const res = await API.post("/execute", { code, language });
+      setOutput({
+        result:  res.data.output,
+        time:    res.data.time,
+        error:   res.data.error,
+        loading: false,
+      });
+    } catch (err) {
+      setOutput({
+        result:  "Execution failed — check your backend.",
+        time:    "—",
+        error:   true,
+        loading: false,
+      });
+    }
+  }, [code, language]);
 
   return (
     <div className="room-page">
@@ -245,7 +246,12 @@ export default function Room() {
                   <button className="output-close" onClick={() => setShowOutput(false)}>✕</button>
                 </div>
               </div>
-              <pre className="output-content">{output.result}</pre>
+              <pre
+                className="output-content"
+                style={{ color: output.error ? "#e05c5c" : "var(--green)" }}
+              >
+                {output.result}
+              </pre>
             </div>
           )}
         </div>

@@ -44,6 +44,7 @@ vite.config.js.timestamp-*
 
 node_modules/
 .env
+.env.example
 devnest-backend/node_modules/
 devnest-backend/.env
 dist/
