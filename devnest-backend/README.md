@@ -67,9 +67,51 @@ devnest-backend/
     └── versionRoutes.js ← Version history
 ```
 
+## Testing
+
+### Unit tests
+
+```bash
+npm test
+```
+
+Runs on Node's built-in test runner (Node 18+), so there is nothing to
+install. Covers the room access rules in `lib/roomAccess.js` — who counts as a
+member, who may edit — which both the REST routes and the Socket.io layer use.
+
+### End-to-end verification
+
+```bash
+npm run verify:e2e
+```
+
+Drives the real HTTP and WebSocket surface with real JWTs against a real
+database. Nothing is mocked. It checks that:
+
+- the room owner and members can join the socket channel
+- a logged-in **non-member** who knows a room ID is refused, and cannot
+  broadcast code even if they try
+- a **viewer** may watch but cannot broadcast code or change the language
+- the socket layer and `PATCH /rooms/:roomId/code` agree about who may edit
+- autosaved code is actually persisted and readable back
+
+Prerequisites — both must be running first:
+
+1. MongoDB reachable at your `MONGO_URI`
+2. The server itself (`npm run dev` or `npm start`) on port 5000
+
+It creates two throwaway accounts (`alice.verify@devnest.test`,
+`bob.verify@devnest.test`) and one room, and is safe to run repeatedly. Point
+`MONGO_URI` at a scratch database rather than anything you care about.
+
+> Note: a member's role is resolved once when they join the socket and cached
+> on that connection, so a role change does not take effect until the client
+> reconnects. This is deliberate — the alternative is a database read on every
+> keystroke — and harmless today, since roles are only set at room create and
+> join.
+
 ## Future Scope (Phase 2)
 
-- Socket.io for real-time code sync
 - Cursor presence / user awareness
 - Operational Transform for conflict resolution
 - Refresh token rotation
