@@ -500,3 +500,62 @@ kbd {
 }
 
 @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Editor topbar meta ──────────────────────────────── */
+.editor-topbar {
+  height: auto;
+  min-height: 38px;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 14px;
+}
+
+.editor-topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.room-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.room-meta-icon {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.room-meta-val {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+}
+
+.room-meta-sep {
+  color: var(--glass-border);
+  font-size: 12px;
+}
+
+/* ── UsersPanel extra rows ───────────────────────────── */
+.room-info-row--col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 4px 0;
+}
+
+.room-info-val--accent {
+  color: var(--a1) !important;
+  font-weight: 700;
+}
+
+.room-info-val--sm {
+  font-size: 11px !important;
+  font-family: 'DM Mono', monospace;
+  color: var(--text2) !important;
+  line-height: 1.4;
+}

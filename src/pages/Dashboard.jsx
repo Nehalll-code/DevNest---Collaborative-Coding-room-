@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { MOCK_ROOMS, LANGUAGE_LABELS } from "../context/mockData";
+import { LANGUAGE_LABELS } from "../context/mockData";
+import { roleForUser } from "../lib/roomRole";
 import "./Dashboard.css";
 import API from "../api/axios";
 
@@ -72,9 +73,9 @@ export default function Dashboard() {
           id:          r.roomId,
           name:        r.name,
           language:    r.language,
-          role:        capitalise(r.members?.find(
-                         m => (m.user?._id||m.user)?.toString() === r.owner?._id?.toString()
-                       )?.role || "editor"),
+          // Our own role in this room — matching against r.owner instead of
+          // the current user made every room show up as "Owner".
+          role:        roleForUser(r, user?.id),
           owner:       r.owner?.name || "Unknown",
           members:     r.members?.length || 1,
           lastEdited:  r.updatedAt
@@ -87,9 +88,7 @@ export default function Dashboard() {
       }
     };
     fetchRooms();
-  }, []);
-
-  const capitalise = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : "Editor";
+  }, [user?.id]);
 
   const filteredRooms = rooms.filter(r =>
     r.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -101,8 +100,10 @@ export default function Dashboard() {
     try {
       await API.post("/rooms/join", { roomId: joinInput.trim() });
     } catch (err) {
-      const msg = err.response?.data?.message;
-      if(msg === "Room not found"){ setJoinError("Room not found"); return; }
+      // Only navigate once the join actually succeeded — falling through on
+      // any other error walked you into a room you were not a member of.
+      setJoinError(err.response?.data?.message || "Could not join that room");
+      return;
     }
     navigate(`/room/${joinInput.trim()}`);
   };
@@ -120,12 +121,9 @@ export default function Dashboard() {
       setNewRoom({ name:"", language:"javascript" });
       navigate(`/room/${r.roomId}`);
     } catch (err) {
-      // fallback if backend down
-      const id = `room_${Math.random().toString(36).slice(2,8)}`;
-      setRooms(prev => [{id, name:newRoom.name.trim(), language:newRoom.language, role:"Owner", owner:user.name, members:1, lastEdited:"Just now"}, ...prev]);
-      setShowCreate(false);
-      setNewRoom({ name:"", language:"javascript" });
-      navigate(`/room/${id}`);
+      // No local fallback room: it would exist only in this tab, so the editor
+      // would look fine while nothing was ever persisted or shareable.
+      setCreateError(err.response?.data?.message || "Could not create the room — is the backend running?");
     }
   };
 

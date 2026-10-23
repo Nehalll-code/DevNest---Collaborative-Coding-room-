@@ -6,6 +6,8 @@ const { Server }    = require("socket.io");
 const cors          = require("cors");
 const jwt           = require("jsonwebtoken");
 const connectDB     = require("./config/db");
+const Room          = require("./models/Room");
+const { isRoomMember, roleInRoom, roleCanEdit } = require("./lib/roomAccess");
 const authRoutes    = require("./routes/authRoutes");
 const roomRoutes    = require("./routes/roomRoutes");
 const versionRoutes = require("./routes/versionRoutes");
@@ -56,8 +58,31 @@ io.on("connection", (socket) => {
   console.log(`🔌 Connected: ${socket.id} (${socket.user.email})`);
 
   // ── join-room ──────────────────────────────────────────
-  // Emitted by Room.jsx on mount
-  socket.on("join-room", ({ roomId, name, avatar }) => {
+  // Emitted by Room.jsx on mount.
+  //
+  // A valid JWT only proves who you are, not that you belong in this room, so
+  // membership is checked here against the room document. The resolved role is
+  // cached on the socket, which keeps the per-keystroke events below free of
+  // database reads.
+  socket.on("join-room", async ({ roomId, name, avatar }) => {
+    let room;
+    try {
+      room = await Room.findOne({ roomId });
+    } catch (err) {
+      console.error(`join-room lookup failed (${roomId}):`, err.message);
+      return socket.emit("room-error", { message: "Could not open that room" });
+    }
+
+    if (!room || !isRoomMember(room, socket.user.id)) {
+      console.warn(`⛔ ${socket.user.email} denied join on room ${roomId}`);
+      return socket.emit("room-error", {
+        message: "You are not a member of this room",
+      });
+    }
+
+    socket.data.roles = socket.data.roles || {};
+    socket.data.roles[roomId] = roleInRoom(room, socket.user.id);
+
     socket.join(roomId);
 
     if (!roomUsers[roomId]) roomUsers[roomId] = [];
@@ -72,15 +97,18 @@ io.on("connection", (socket) => {
   });
 
   // ── code-change ────────────────────────────────────────
-  // Emitted on every editor keystroke
-  // Broadcast to everyone EXCEPT sender (prevents echo loop)
+  // Emitted on every editor keystroke.
+  // Broadcast to everyone EXCEPT sender (prevents echo loop).
+  // Viewers and non-members are dropped here, matching PATCH /rooms/:id/code.
   socket.on("code-change", ({ roomId, code }) => {
+    if (!roleCanEdit(socket.data.roles?.[roomId])) return;
     socket.to(roomId).emit("code-update", code);
   });
 
   // ── language-change ────────────────────────────────────
   // Sync language selector across all users in room
   socket.on("language-change", ({ roomId, language }) => {
+    if (!roleCanEdit(socket.data.roles?.[roomId])) return;
     socket.to(roomId).emit("language-update", language);
   });
 
