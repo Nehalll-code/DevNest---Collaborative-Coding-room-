@@ -1,11 +1,6 @@
-// components/UsersPanel.jsx
-// Now accepts liveUsers from Room.jsx (real Socket.io data)
-// Falls back to a single "You" entry if socket hasn't connected yet
-
 import "./UsersPanel.css";
 
-export default function UsersPanel({ liveUsers = [], currentUser }) {
-  // If socket hasn't sent data yet, show just the current user
+export default function UsersPanel({ liveUsers = [], currentUser, roomMeta = {} }) {
   const users = liveUsers.length > 0
     ? liveUsers
     : currentUser
@@ -22,19 +17,15 @@ export default function UsersPanel({ liveUsers = [], currentUser }) {
       <ul className="users-list">
         {users.map((u, i) => {
           const isYou = u.userId === currentUser?.id || u.userId === currentUser?._id;
-          // Generate a consistent colour from the name
-          const colors = ["#6c63ff", "#10d9a0", "#f5a623", "#e05c5c", "#4da6ff", "#ff6bcb"];
+          const colors = ["#6c63ff","#10d9a0","#f5a623","#e05c5c","#4da6ff","#ff6bcb"];
           const color  = colors[(u.name?.charCodeAt(0) || 0) % colors.length];
-          const initials = u.avatar || u.name?.slice(0, 2).toUpperCase() || "??";
+          const initials = u.avatar || u.name?.slice(0,2).toUpperCase() || "??";
 
           return (
             <li key={u.socketId || i} className="user-item">
               <div className="user-item-avatar" style={{ background: color }}>
                 {initials}
-                <span
-                  className="user-status-dot"
-                  style={{ background: "#3ddc84" }}
-                />
+                <span className="user-status-dot" style={{ background: "#3ddc84" }} />
               </div>
               <div className="user-item-info">
                 <div className="user-item-name">
@@ -51,8 +42,8 @@ export default function UsersPanel({ liveUsers = [], currentUser }) {
       </ul>
 
       <div className="panel-divider" />
-
       <div className="panel-section-title">Room Info</div>
+
       <div className="room-info-list">
         <div className="room-info-row">
           <span className="room-info-key">Mode</span>
@@ -60,11 +51,30 @@ export default function UsersPanel({ liveUsers = [], currentUser }) {
         </div>
         <div className="room-info-row">
           <span className="room-info-key">Autosave</span>
-          <span className="room-info-val" style={{ color: "var(--green)" }}>On</span>
+          <span className="room-info-val" style={{ color:"var(--green)" }}>On</span>
         </div>
         <div className="room-info-row">
           <span className="room-info-key">Socket</span>
-          <span className="room-info-val" style={{ color: "#3ddc84" }}>Live</span>
+          <span className="room-info-val" style={{ color:"#3ddc84" }}>Live</span>
+        </div>
+      </div>
+
+      {/* ── Room metadata ── */}
+      <div className="panel-divider" />
+      <div className="panel-section-title">Created By</div>
+
+      <div className="room-info-list">
+        <div className="room-info-row room-info-row--col">
+          <span className="room-info-key">Owner</span>
+          <span className="room-info-val room-info-val--accent">{roomMeta.owner || "—"}</span>
+        </div>
+        <div className="room-info-row room-info-row--col">
+          <span className="room-info-key">Created</span>
+          <span className="room-info-val room-info-val--sm">{roomMeta.createdAt || "—"}</span>
+        </div>
+        <div className="room-info-row room-info-row--col">
+          <span className="room-info-key">Updated</span>
+          <span className="room-info-val room-info-val--sm">{roomMeta.updatedAt || "—"}</span>
         </div>
       </div>
     </aside>

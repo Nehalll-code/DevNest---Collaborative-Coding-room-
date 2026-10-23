@@ -30,6 +30,7 @@ export default function useSocket({
   onCodeChange,
   onLanguageChange,
   onUsersChange,
+  onRoomError,
 }) {
   const socketRef = useRef(null);
 
@@ -63,6 +64,13 @@ export default function useSocket({
     // Server sends updated user list whenever someone joins/leaves
     socket.on("room-users", (users) => {
       onUsersChange?.(users);
+    });
+
+    // The server refused the join — not a member of this room, or it is gone.
+    socket.on("room-error", (payload) => {
+      const message = payload?.message || "Could not join this room";
+      console.warn("Room error:", message);
+      onRoomError?.(message);
     });
 
     socket.on("connect_error", (err) => {

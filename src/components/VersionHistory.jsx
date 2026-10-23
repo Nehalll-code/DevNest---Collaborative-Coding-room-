@@ -1,3 +1,4 @@
+import { versionLabel } from "../lib/versionLabel";
 import "./VersionHistory.css";
 
 export default function VersionHistory({ versions, onRestore }) {
@@ -18,32 +19,34 @@ export default function VersionHistory({ versions, onRestore }) {
         </div>
       ) : (
         <ul className="version-list">
-          {versions.map((v, i) => (
-            <li key={v.id} className="version-item">
-              <div className="version-item-top">
-                <div className="version-number">
-                  {versions.length - i === 1 ? (
-                    <span className="version-latest">Latest</span>
-                  ) : (
-                    `v${versions.length - i}`
-                  )}
-                </div>
-                <button
-                  className="btn btn-ghost btn-sm version-restore-btn"
-                  onClick={() => {
-                    console.log("Restoring version:", v);
-                    onRestore(v.code);
-                  }}
-                  title="Restore this version"
-                >
-                  ↩ Restore
-                </button>
-              </div>
+          {versions.map((v, i) => {
+            // The list is newest-first, so index 0 is the most recent save.
+            const label = versionLabel(i, versions.length);
 
-              <div className="version-ts">{v.timestamp}</div>
-              <div className="version-preview">{v.preview}</div>
-            </li>
-          ))}
+            return (
+              <li key={v.id} className="version-item">
+                <div className="version-item-top">
+                  <div className="version-number">
+                    {label === "Latest" ? (
+                      <span className="version-latest">{label}</span>
+                    ) : (
+                      label
+                    )}
+                  </div>
+                  <button
+                    className="btn btn-ghost btn-sm version-restore-btn"
+                    onClick={() => onRestore(v.code)}
+                    title="Restore this version"
+                  >
+                    ↩ Restore
+                  </button>
+                </div>
+
+                <div className="version-ts">{v.timestamp}</div>
+                <div className="version-preview">{v.preview}</div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </aside>
